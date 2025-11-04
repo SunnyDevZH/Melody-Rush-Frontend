@@ -62,7 +62,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   const LANES = 4;
   const LANE_KEYS = ['a', 's', 'd', 'f'];
   const LANE_COLORS = ['#e74c3c', '#f39c12', '#2ecc71', '#3498db'];
-  const SPEED_PX_PER_SEC = 320; // Fallgeschwindigkeit
+  const SPEED_PX_PER_SEC = 220; // Fallgeschwindigkeit (verlangsamt)
   const NOTE_HEIGHT = 60;
   const LANE_PADDING = 10;
   const HITLINE_Y = height - 140; // Position der Ziellinie
@@ -101,18 +101,24 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
       const idx = LANE_KEYS.indexOf(key);
       if (idx === -1) return;
 
-      // Highlight Lane unabhängig vom Spielstatus
+      // Lane aktiv solange Taste gehalten wird
       laneActiveRef.current[idx] = true;
-      // nach kurzer Zeit wieder ausschalten
-      setTimeout(() => {
-        laneActiveRef.current[idx] = false;
-      }, 120);
 
       // Wertung nur wenn laufend
       if (isRunning) handleHit(idx);
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const idx = LANE_KEYS.indexOf(key);
+      if (idx === -1) return;
+      laneActiveRef.current[idx] = false;
+    };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
   }, [isRunning]);
 
   const handleHit = (lane: number) => {
