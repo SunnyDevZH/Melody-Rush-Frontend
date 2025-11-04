@@ -12,6 +12,7 @@ interface ChartNote {
 
 interface RuntimeNote extends ChartNote {
   judged?: 'perfect' | 'good' | 'miss';
+  hitFlash?: number; // Kurzer Flash-Timer für helle Aufleuchteffekte nach einem Treffer
 }
 
 // Neu: Song-Definitionen und Chart-Builder
@@ -46,6 +47,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   const startTimeRef = useRef<number | null>(null); // performance.now() Start
   const timeRef = useRef<number>(0); // aktuelle Spielzeit in Sekunden
   const pausedTimeRef = useRef<number>(0); // gemerkte Zeit beim Pausieren
+  const prevFrameTimeRef = useRef<number | null>(null); // Delta-Time für Effekte (Flash, Feedback) berechnen
 
   // UI/Score/State
   const [score, setScore] = useState(0);
@@ -54,10 +56,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   const feedbackTimerRef = useRef<number>(0);
   const [isRunning, setIsRunning] = useState(false);
   const [songId, setSongId] = useState<string>(SONGS[0].id);
+  const [players, setPlayers] = useState<string>('');
 
   // Konstanten
   const LANES = 4;
-  const LANE_KEYS = ['1', '2', '3', '4'];
+  const LANE_KEYS = ['a', 's', 'd', 'f'];
   const LANE_COLORS = ['#e74c3c', '#f39c12', '#2ecc71', '#3498db'];
   const SPEED_PX_PER_SEC = 320; // Fallgeschwindigkeit
   const NOTE_HEIGHT = 60;
@@ -68,6 +71,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   const PERFECT_WINDOW = 0.07;
   const GOOD_WINDOW = 0.14;
   const LATE_WINDOW = 0.18; // danach Miss
+  const HIT_FLASH_DURATION = 0.25; // Dauer des hellen Aufblitzens nach einem Treffer
+
+  // Aktive Lane-Highlights beim Tastendruck
+  const laneActiveRef = useRef<boolean[]>(Array.from({ length: LANES }, () => false));
 
   // Erzeuge Chart abhängig vom ausgewählten Song
   const chart: ChartNote[] = useMemo(() => {
@@ -90,13 +97,23 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   // Keyboard Handling
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      const idx = LANE_KEYS.indexOf(e.key);
+      const key = e.key.toLowerCase();
+      const idx = LANE_KEYS.indexOf(key);
       if (idx === -1) return;
-      handleHit(idx);
+
+      // Highlight Lane unabhängig vom Spielstatus
+      laneActiveRef.current[idx] = true;
+      // nach kurzer Zeit wieder ausschalten
+      setTimeout(() => {
+        laneActiveRef.current[idx] = false;
+      }, 120);
+
+      // Wertung nur wenn laufend
+      if (isRunning) handleHit(idx);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  }, [isRunning]);
 
   const handleHit = (lane: number) => {
     if (!isRunning) return;
@@ -116,11 +133,13 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
     const { note, delta } = best;
     if (delta <= PERFECT_WINDOW) {
       note.judged = 'perfect';
+      note.hitFlash = HIT_FLASH_DURATION; // Starte hellen Flash für getroffene Note
       comboRef.current += 1;
       setScore((s) => s + 100 + comboRef.current * 2);
       flashFeedback('PERFECT');
     } else if (delta <= GOOD_WINDOW) {
       note.judged = 'good';
+      note.hitFlash = HIT_FLASH_DURATION; // Starte hellen Flash für getroffene Note
       comboRef.current += 1;
       setScore((s) => s + 70 + comboRef.current);
       flashFeedback('GOOD');
@@ -172,6 +191,17 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
         ctx.lineTo(x, height);
         ctx.stroke();
       }
+
+      // Aktives Highlight der Lane
+      if (laneActiveRef.current[i]) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fillRect(x, 0, laneWidth, height);
+        ctx.strokeStyle = LANE_COLORS[i];
+        ctx.lineWidth = 4;
+        ctx.strokeRect(x + 4, 4, laneWidth - 8, height - 8);
+        ctx.restore();
+      }
     }
 
     // Hitline
@@ -203,10 +233,28 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
       ctx.lineWidth = 2;
       ctx.strokeRect(x, y, w, NOTE_HEIGHT);
 
-      // Getroffene Noten leicht transparent
+      // Getroffene Noten: Grundoverlay + kurzer heller Flash/Glow
       if (n.judged === 'perfect' || n.judged === 'good') {
+        // Grundoverlay (wie zuvor)
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
         ctx.fillRect(x, y, w, NOTE_HEIGHT);
+
+        const flash = n.hitFlash ?? 0;
+        if (flash > 0) {
+          const t = Math.max(0, Math.min(1, flash / HIT_FLASH_DURATION));
+          // Heller Overlay mit additiver Mischung
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.fillStyle = `rgba(255,255,255,${0.65 * t + 0.15})`;
+          ctx.fillRect(x, y, w, NOTE_HEIGHT);
+          // Glow-Rand
+          ctx.shadowColor = `rgba(255,255,255,${0.9 * t})`;
+          ctx.shadowBlur = 22 * t + 6;
+          ctx.lineWidth = 4 + 8 * t;
+          ctx.strokeStyle = `rgba(255,255,255,${0.8 * t})`;
+          ctx.strokeRect(x - 2, y - 2, w + 4, NOTE_HEIGHT + 4);
+          ctx.restore();
+        }
       }
     }
 
@@ -218,6 +266,12 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
 
     ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
     ctx.fillText(`Score: ${score}   Combo: ${comboRef.current}`, width / 2, 64);
+
+    if (players.trim().length > 0) {
+      ctx.font = '16px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.fillStyle = '#d1d5db';
+      ctx.fillText(`Spieler: ${players}`, width / 2, 88);
+    }
 
     // Feedback
     if (feedbackTimerRef.current > 0) {
@@ -231,7 +285,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
     ctx.fillStyle = '#e5e7eb';
     for (let i = 0; i < LANES; i++) {
       const x = i * laneWidth + laneWidth / 2;
-      ctx.fillText(LANE_KEYS[i], x, height - 12);
+      ctx.fillText(LANE_KEYS[i].toUpperCase(), x, height - 12);
     }
   };
 
@@ -241,20 +295,37 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const nowMs = performance.now();
+    let dt = 0;
+    if (prevFrameTimeRef.current == null) {
+      prevFrameTimeRef.current = nowMs;
+    } else {
+      dt = (nowMs - prevFrameTimeRef.current) / 1000;
+      prevFrameTimeRef.current = nowMs;
+    }
+
     // Zeit aktualisieren nur wenn laufend
     if (isRunning) {
       if (startTimeRef.current === null) {
-        startTimeRef.current = performance.now() - pausedTimeRef.current * 1000;
+        startTimeRef.current = nowMs - pausedTimeRef.current * 1000;
       }
-      const nowSec = (performance.now() - startTimeRef.current) / 1000;
+      const nowSec = (nowMs - startTimeRef.current) / 1000;
       timeRef.current = nowSec;
       updateMisses(nowSec);
     }
 
     // Feedback abklingen lassen (auch im Pause-Bild leicht runterzählen)
-    if (feedbackTimerRef.current > 0) {
-      const dt = 1 / 60; // näherungsweise
+    if (feedbackTimerRef.current > 0 && dt > 0) {
       feedbackTimerRef.current = Math.max(0, feedbackTimerRef.current - dt);
+    }
+
+    // Flash der getroffenen Noten herunterzählen
+    if (dt > 0) {
+      for (const n of notesRef.current) {
+        if ((n.judged === 'perfect' || n.judged === 'good') && n.hitFlash && n.hitFlash > 0) {
+          n.hitFlash = Math.max(0, n.hitFlash - dt);
+        }
+      }
     }
 
     // Zeichnen mit aktueller Zeit
@@ -314,6 +385,16 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
               <option key={s.id} value={s.id}>{s.title}</option>
             ))}
           </select>
+        </label>
+        <label style={{ color: '#e5e7eb' }}>
+          Spieler:
+          <input
+            type="text"
+            value={players}
+            onChange={(e) => setPlayers(e.target.value)}
+            placeholder="Name oder Namen (z.B. Anna, Tom)"
+            style={{ marginLeft: 8, padding: '6px 8px', borderRadius: 6, border: '1px solid #374151', background: '#111827', color: '#e5e7eb' }}
+          />
         </label>
         <button onClick={onStart} disabled={isRunning} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: '#fff', cursor: isRunning ? 'not-allowed' : 'pointer' }}>Start</button>
         <button onClick={onStop} disabled={!isRunning} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: !isRunning ? 'not-allowed' : 'pointer' }}>Stop</button>
