@@ -14,17 +14,46 @@ interface RuntimeNote extends ChartNote {
   judged?: 'perfect' | 'good' | 'miss';
 }
 
+// Neu: Song-Definitionen und Chart-Builder
+interface SongConfig {
+  id: string;
+  title: string;
+  bpm: number;
+  noteCount: number;
+  leadIn: number; // Sekunden Vorlauf
+  pattern: number[]; // Lanes 0..3
+}
+
+const SONGS: SongConfig[] = [
+  { id: 'demo-120', title: 'Demo – 120 BPM', bpm: 120, noteCount: 32, leadIn: 2, pattern: [0, 1, 2, 3, 2, 1, 0, 3] },
+  { id: 'demo-140', title: 'Demo – 140 BPM', bpm: 140, noteCount: 40, leadIn: 2, pattern: [0, 2, 1, 3, 3, 1, 2, 0] },
+];
+
+function buildChart(song: SongConfig): ChartNote[] {
+  const notes: ChartNote[] = [];
+  const beat = 60 / song.bpm;
+  let t = song.leadIn;
+  for (let i = 0; i < song.noteCount; i++) {
+    notes.push({ time: t, lane: song.pattern[i % song.pattern.length] });
+    t += beat;
+  }
+  return notes;
+}
+
 const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null); // performance.now() Start
   const timeRef = useRef<number>(0); // aktuelle Spielzeit in Sekunden
+  const pausedTimeRef = useRef<number>(0); // gemerkte Zeit beim Pausieren
 
-  // UI/Score
+  // UI/Score/State
   const [score, setScore] = useState(0);
   const comboRef = useRef<number>(0);
   const lastJudgementRef = useRef<string>('');
   const feedbackTimerRef = useRef<number>(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [songId, setSongId] = useState<string>(SONGS[0].id);
 
   // Konstanten
   const LANES = 4;
@@ -40,23 +69,22 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   const GOOD_WINDOW = 0.14;
   const LATE_WINDOW = 0.18; // danach Miss
 
-  // Einfache Demo-Chart (8 Takte, 120 BPM -> Schlag alle 0.5s)
+  // Erzeuge Chart abhängig vom ausgewählten Song
   const chart: ChartNote[] = useMemo(() => {
-    const notes: ChartNote[] = [];
-    const beat = 0.5; // 120 BPM
-    let t = 2; // Start mit kleinem Vorlauf (2s)
-    const pattern = [0, 1, 2, 3, 2, 1, 0, 3];
-    for (let i = 0; i < 32; i++) {
-      notes.push({ time: t, lane: pattern[i % pattern.length] });
-      t += beat;
-    }
-    return notes;
-  }, []);
+    const song = SONGS.find((s) => s.id === songId)!;
+    return buildChart(song);
+  }, [songId]);
 
   const notesRef = useRef<RuntimeNote[]>([]);
-  // Initialisiere Runtime-Noten einmal
+  // Initialisiere Runtime-Noten und resette Status bei Songwechsel
   useEffect(() => {
     notesRef.current = chart.map((n) => ({ ...n }));
+    comboRef.current = 0;
+    setScore(0);
+    timeRef.current = 0;
+    pausedTimeRef.current = 0;
+    startTimeRef.current = null;
+    setIsRunning(false);
   }, [chart]);
 
   // Keyboard Handling
@@ -71,6 +99,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
   }, []);
 
   const handleHit = (lane: number) => {
+    if (!isRunning) return;
     const now = timeRef.current;
     // Finde die beste (zeitlich nächste) unbewertete Note in der Lane im aktiven Fenster
     let best: { note: RuntimeNote; delta: number } | null = null;
@@ -183,3 +212,127 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ width = 800, height = 600 }) =>
 
     // HUD
     ctx.fillStyle = '#f9fafb';
+    ctx.font = 'bold 26px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Piano Hero – 4 Tasten', width / 2, 36);
+
+    ctx.font = '18px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillText(`Score: ${score}   Combo: ${comboRef.current}`, width / 2, 64);
+
+    // Feedback
+    if (feedbackTimerRef.current > 0) {
+      ctx.fillStyle = lastJudgementRef.current === 'MISS' ? '#ef4444' : '#22c55e';
+      ctx.font = 'bold 28px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+      ctx.fillText(lastJudgementRef.current, width / 2, HITLINE_Y - 20);
+    }
+
+    // Key Labels unten
+    ctx.font = 'bold 16px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+    ctx.fillStyle = '#e5e7eb';
+    for (let i = 0; i < LANES; i++) {
+      const x = i * laneWidth + laneWidth / 2;
+      ctx.fillText(LANE_KEYS[i], x, height - 12);
+    }
+  };
+
+  const loop = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Zeit aktualisieren nur wenn laufend
+    if (isRunning) {
+      if (startTimeRef.current === null) {
+        startTimeRef.current = performance.now() - pausedTimeRef.current * 1000;
+      }
+      const nowSec = (performance.now() - startTimeRef.current) / 1000;
+      timeRef.current = nowSec;
+      updateMisses(nowSec);
+    }
+
+    // Feedback abklingen lassen (auch im Pause-Bild leicht runterzählen)
+    if (feedbackTimerRef.current > 0) {
+      const dt = 1 / 60; // näherungsweise
+      feedbackTimerRef.current = Math.max(0, feedbackTimerRef.current - dt);
+    }
+
+    // Zeichnen mit aktueller Zeit
+    draw(ctx, timeRef.current);
+
+    rafRef.current = requestAnimationFrame(loop);
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Initial draw
+    draw(ctx, 0);
+
+    // Start loop
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width, height, isRunning]);
+
+  // Start/Stop und Songwechsel
+  const onStart = () => {
+    if (isRunning) return;
+    // Beim Start die Startzeit relativ zur pausierten Zeit setzen
+    startTimeRef.current = performance.now() - pausedTimeRef.current * 1000;
+    setIsRunning(true);
+  };
+  const onStop = () => {
+    if (!isRunning) return;
+    // Zeit merken und stoppen
+    pausedTimeRef.current = timeRef.current;
+    setIsRunning(false);
+  };
+  const onChangeSong = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSongId(e.target.value);
+  };
+
+  return (
+    <div style={{ maxWidth: width + 40, margin: '0 auto' }}>
+      <div style={{
+        display: 'flex',
+        gap: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+        flexWrap: 'wrap'
+      }}>
+        <label style={{ color: '#e5e7eb' }}>
+          Song:
+          <select value={songId} onChange={onChangeSong} style={{ marginLeft: 8, padding: '6px 8px', borderRadius: 6 }}>
+            {SONGS.map((s) => (
+              <option key={s.id} value={s.id}>{s.title}</option>
+            ))}
+          </select>
+        </label>
+        <button onClick={onStart} disabled={isRunning} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: '#fff', cursor: isRunning ? 'not-allowed' : 'pointer' }}>Start</button>
+        <button onClick={onStop} disabled={!isRunning} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: !isRunning ? 'not-allowed' : 'pointer' }}>Stop</button>
+      </div>
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{
+          display: 'block',
+          margin: '0 auto',
+          borderRadius: 12,
+          border: '2px solid #374151',
+          background: '#111827',
+        }}
+      />
+    </div>
+  );
+};
+
+export { GameCanvas };
+export default GameCanvas;
