@@ -1,0 +1,10 @@
+.canvasElement { display:block; margin:0 auto; border-radius:12px; background:#111827; }
+.gameControls { display:flex; gap:12px; justify-content:center; align-items:center; margin-top:12px; flex-wrap:wrap; }
+.btn { padding:8px 16px; border-radius:8px; border:none; color:#fff; font:inherit; transition:transform .15s ease, box-shadow .15s ease; }
+.btn:disabled { cursor:not-allowed; filter:grayscale(40%); opacity:.6; }
+.btn:not(:disabled) { cursor:pointer; }
+.btnStart { background:#22c55e; }
+.btnStop { background:#ef4444; }
+.btnStart:not(:disabled):hover { background:#16a34a; }
+.btnStop:not(:disabled):hover { background:#dc2626; }
+.btn:not(:disabled):hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.3); }

@@ -1,0 +1,14 @@
+.sidebar {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 16px;
+  color: #fff;
+  backdrop-filter: blur(10px);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+.sidebar h3 { margin: 0 0 12px 0; }
+.songSelect { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #374151; background:#111827; color:#e5e7eb; }
+.hint { font-size:12px; color:#e5e7ebb3; margin-top:8px; }
+.activeHint { margin-top:10px; font-size:12px; opacity:0.8; }
