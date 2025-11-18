@@ -110,7 +110,7 @@ function App() {
       <div className={loadingStyles.loadingScreen}>
         <div className={loadingStyles.spinnerContainer}>
           <div className={loadingStyles.spinner} />
-          <h1 className={loadingStyles.gameTitle}>Piano Game</h1>
+          <h1 className={loadingStyles.gameTitle}>Melody Rush</h1>
           <div className={loadingStyles.keysHint}>Steuere mit den Tasten <span className={loadingStyles.keycap}>A</span><span className={loadingStyles.keycap}>S</span><span className={loadingStyles.keycap}>D</span><span className={loadingStyles.keycap}>F</span></div>
         </div>
       </div>
@@ -151,7 +151,6 @@ function App() {
             addPlayer={addPlayer}
             songId={songId}
             setSongId={setSongId}
-            activePlayerName={activePlayer?.name}
           />
         )}
       </div>

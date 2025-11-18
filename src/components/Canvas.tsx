@@ -95,8 +95,14 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
     }
     ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=3; ctx.strokeRect(6,HITLINE_Y - NOTE_HEIGHT/2,width-12,NOTE_HEIGHT);
     for(const n of notesRef.current){ if(n.judged==='miss') continue; const y = HITLINE_Y - (n.time - now) * SPEED_PX_PER_SEC - NOTE_HEIGHT/2; const x = n.lane * laneWidth + LANE_PADDING; const w = laneWidth - LANE_PADDING*2; if(y < -NOTE_HEIGHT || y > height + NOTE_HEIGHT) continue; ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fillRect(x+3,y+3,w,NOTE_HEIGHT); ctx.fillStyle=LANE_COLORS[n.lane]; ctx.fillRect(x,y,w,NOTE_HEIGHT); ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fillRect(x,y,w,NOTE_HEIGHT/3); ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.strokeRect(x,y,w,NOTE_HEIGHT); if(n.judged==='perfect' || n.judged==='good'){ ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.fillRect(x,y,w,NOTE_HEIGHT); const flash=n.hitFlash??0; if(flash>0){ const t=Math.max(0,Math.min(1,flash/HIT_FLASH_DURATION)); ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.fillStyle=`rgba(255,255,255,${0.65*t+0.15})`; ctx.fillRect(x,y,w,NOTE_HEIGHT); ctx.shadowColor=`rgba(255,255,255,${0.9*t})`; ctx.shadowBlur=22*t+6; ctx.lineWidth=4+8*t; ctx.strokeStyle=`rgba(255,255,255,${0.8*t})`; ctx.strokeRect(x-2,y-2,w+4,NOTE_HEIGHT+4); ctx.restore(); } } }
-    ctx.fillStyle='#f9fafb'; ctx.font='bold 26px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.textAlign='center'; ctx.fillText('Piano Hero', width/2,36);
-    if(getPrepare()>0 && !isRunning){ ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,width,height); ctx.fillStyle='#fff'; ctx.font='bold 34px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText(`Spieler ${activePlayerName || ''} bereit machen...`, width/2,height/2 - 30); ctx.font='18px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText('Gleich startet der Countdown', width/2,height/2 + 10); }
+    
+    // HUD: Teamname und Score anzeigen
+    ctx.fillStyle='#f9fafb'; 
+    ctx.font='bold 28px system-ui, -apple-system, Segoe UI, Roboto, Arial'; 
+    ctx.textAlign='center'; 
+    ctx.fillText(`${activePlayerName || 'Team'} - Score: ${score}`, width/2, 40);
+    
+    if(getPrepare()>0 && !isRunning){ ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,width,height); ctx.fillStyle='#fff'; ctx.font='bold 34px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText(`Team ${activePlayerName || ''} bereit machen...`, width/2,height/2 - 30); ctx.font='18px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText('Gleich startet der Countdown', width/2,height/2 + 10); }
     if(getCountdown()>0){ const n=Math.max(1,Math.ceil(getCountdown())); ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,width,height); ctx.fillStyle='#fff'; ctx.font='bold 96px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText(String(n), width/2, height/2); }
     if(sessionFinished){ ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,width,height); }
     

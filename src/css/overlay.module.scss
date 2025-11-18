@@ -3,7 +3,8 @@
 .result { display:flex; flex-direction:column; align-items:center; gap:12px; }
 .trophy { font-size:80px; margin-bottom:8px; }
 .winnerText { font-size:36px; font-weight:700; }
-.scoreText { font-size:32px; font-weight:600; opacity:0.95; }
+.scoreText { font-size:32px; font-weight:600; opacity:0.95; display:flex; align-items:center; gap:12px; }
+.scoreText::before { content:'🏆'; font-size:36px; }
 .restartBtn { padding:12px 28px; font-size:18px; border-radius:10px; border:none; background:linear-gradient(135deg,#2563eb,#3b82f6); color:#fff; cursor:pointer; box-shadow:0 6px 18px -4px rgba(0,0,0,0.5); }
 .restartBtn:hover { filter:brightness(1.05); }
 .restartBtn:active { transform:translateY(1px); }

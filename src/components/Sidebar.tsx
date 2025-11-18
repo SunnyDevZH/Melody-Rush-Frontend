@@ -14,10 +14,9 @@ interface SidebarProps {
   addPlayer: () => void;
   songId: string;
   setSongId: (id: string) => void;
-  activePlayerName?: string | null;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ players, activePlayerId, onSelectPlayer, newPlayerName, setNewPlayerName, addPlayer, songId, setSongId, activePlayerName }) => {
+const Sidebar: React.FC<SidebarProps> = ({ players, activePlayerId, onSelectPlayer, newPlayerName, setNewPlayerName, addPlayer, songId, setSongId }) => {
   return (
     <aside className={`${sidebarStyles.sidebar} right`}>
       <h3>Teams</h3>
@@ -26,8 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ players, activePlayerId, onSelectPlay
         <button onClick={addPlayer}>+</button>
       </div>
       <PlayerList players={players} activePlayerId={activePlayerId} onSelect={onSelectPlayer} />
-      {activePlayerName && <div className={sidebarStyles.activeHint}>Aktiv: {activePlayerName}</div>}
-      <div>
+      <div style={{ marginTop: '5px' }}>
         <h3>Songs</h3>
         <select className={sidebarStyles.songSelect} value={songId} onChange={e => setSongId(e.target.value)}>
           {SONGS.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
