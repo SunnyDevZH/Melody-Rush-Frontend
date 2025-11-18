@@ -134,6 +134,8 @@ function App() {
               sessionFinished={sessionFinished}
               onManualStart={onManualStart}
               winnerName={winner?.name}
+              winnerScore={winner?.score}
+              playerCount={players.length}
               onRestart={onRestart}
             />
           </div>

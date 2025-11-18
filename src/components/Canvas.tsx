@@ -20,10 +20,12 @@ interface CanvasProps {
   sessionFinished?: boolean;
   onManualStart?: () => void;
   winnerName?: string;
+  winnerScore?: number;
+  playerCount?: number;
   onRestart?: () => void;
 }
 
-const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onScoreChange, canStart = true, onFinished, startSignal, activePlayerName, sessionFinished = false, onManualStart, winnerName, onRestart }) => {
+const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onScoreChange, canStart = true, onFinished, startSignal, activePlayerName, sessionFinished = false, onManualStart, winnerName, winnerScore, playerCount = 0, onRestart }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -168,7 +170,13 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
   return (
     <div style={{ maxWidth: width + 40, margin: '0 auto', position: 'relative' }}>
       <canvas ref={canvasRef} width={width} height={height} className={styles.canvasElement} />
-      <EndOverlay visible={!!sessionFinished} winnerName={winnerName} onRestart={onRestart} />
+      <EndOverlay 
+        visible={!!sessionFinished} 
+        winnerName={winnerName} 
+        winnerScore={winnerScore}
+        playerCount={playerCount}
+        onRestart={onRestart} 
+      />
       <div className={styles.gameControls}>
         <button className={`${styles.btn} ${styles.btnStart}`} onClick={onStart} disabled={!canStart || isRunning || sessionFinished}>Start</button>
         <button className={`${styles.btn} ${styles.btnStop}`} onClick={onStop} disabled={!isRunning}>Stop</button>
