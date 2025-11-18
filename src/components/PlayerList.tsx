@@ -12,7 +12,7 @@ const PlayerList: React.FC<PlayerListProps> = ({ players, activePlayerId, onSele
   if (!players.length) {
     return (
       <ul className={playersStyles.playersList}>
-        <li className={playersStyles.muted}>Noch keine Spieler</li>
+        <li className={playersStyles.muted}>Noch keine Teams</li>
       </ul>
     );
   }

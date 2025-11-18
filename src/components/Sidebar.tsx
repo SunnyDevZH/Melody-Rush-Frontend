@@ -20,7 +20,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ players, activePlayerId, onSelectPlayer, newPlayerName, setNewPlayerName, addPlayer, songId, setSongId, activePlayerName }) => {
   return (
     <aside className={`${sidebarStyles.sidebar} right`}>
-      <h3>Spieler</h3>
+      <h3>Teams</h3>
       <div className={playersStyles.addPlayer}>
         <input value={newPlayerName} onChange={e => setNewPlayerName(e.target.value)} placeholder="Name hinzufügen" />
         <button onClick={addPlayer}>+</button>

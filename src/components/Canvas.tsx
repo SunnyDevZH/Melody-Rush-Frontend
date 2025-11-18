@@ -25,6 +25,7 @@ interface CanvasProps {
 
 const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onScoreChange, canStart = true, onFinished, startSignal, activePlayerName, sessionFinished = false, onManualStart, winnerName, onRestart }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const timeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
@@ -44,6 +45,19 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
   }, [songId]);
   const lastNoteTime = useMemo(() => chart.length ? Math.max(...chart.map(n => n.time)) : 0, [chart]);
   const notesRef = useRef<RuntimeNote[]>([]);
+
+  // Audio laden wenn Song sich ändert
+  const currentSong = useMemo(() => SONGS.find(s => s.id === songId)!, [songId]);
+  useEffect(() => {
+    if (currentSong.audioPath) {
+      const audio = new Audio(currentSong.audioPath);
+      audio.preload = 'auto';
+      audioRef.current = audio;
+      return () => { audio.pause(); audio.src = ''; };
+    } else {
+      audioRef.current = null;
+    }
+  }, [currentSong]);
 
   useEffect(() => { onScoreChange?.(score); }, [score, onScoreChange]);
 
@@ -88,11 +102,27 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
   };
 
   useGameLoop((dt, nowMs) => {
-    const started = tick(dt); if(started){ startTimeRef.current = nowMs; timeRef.current = 0; }
+    const started = tick(dt); 
+    if(started){ 
+      startTimeRef.current = nowMs; 
+      timeRef.current = 0;
+      // Audio starten wenn vorhanden
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => console.warn('Audio play failed:', err));
+      }
+    }
     if(isRunning){ if(startTimeRef.current === null){ startTimeRef.current = nowMs - pausedTimeRef.current * 1000; }
       const nowSec = (nowMs - startTimeRef.current)/1000; timeRef.current = nowSec; updateMisses(nowSec);
       const allJudged = notesRef.current.length>0 && notesRef.current.every(n => !!n.judged);
-      if(!finishedRef.current && allJudged && nowSec >= lastNoteTime + TIMING_WINDOWS.LATE + 0.05){ finishedRef.current=true; setIsRunning(false); pausedTimeRef.current = timeRef.current; onFinished?.(score); }
+      if(!finishedRef.current && allJudged && nowSec >= lastNoteTime + TIMING_WINDOWS.LATE + 0.05){ 
+        finishedRef.current=true; 
+        setIsRunning(false); 
+        pausedTimeRef.current = timeRef.current; 
+        // Audio stoppen
+        if (audioRef.current) audioRef.current.pause();
+        onFinished?.(score); 
+      }
     }
     if(feedbackTimerRef.current>0 && dt>0){ feedbackTimerRef.current = Math.max(0, feedbackTimerRef.current - dt); }
     if(dt>0){ for(const n of notesRef.current){ if((n.judged==='perfect' || n.judged==='good') && n.hitFlash && n.hitFlash>0){ n.hitFlash = Math.max(0, n.hitFlash - dt); } } }
@@ -100,7 +130,13 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
   }, [width, height, isRunning, sessionFinished, chart, lastNoteTime]);
 
   const onStart = () => { if(!canStart || sessionFinished) return; onManualStart?.(); };
-  const onStop = () => { if(!isRunning) return; pausedTimeRef.current = timeRef.current; setIsRunning(false); };
+  const onStop = () => { 
+    if(!isRunning) return; 
+    pausedTimeRef.current = timeRef.current; 
+    setIsRunning(false);
+    // Audio pausieren
+    if (audioRef.current) audioRef.current.pause();
+  };
 
   return (
     <div style={{ maxWidth: width + 40, margin: '0 auto', position: 'relative' }}>
