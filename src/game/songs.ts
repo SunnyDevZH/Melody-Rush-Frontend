@@ -30,10 +30,17 @@ export const SONGS: SongConfig[] = [
   { 
     id: 'superstition', 
     title: 'Stevie Wonder – Superstition', 
-    bpm: 100, 
-    noteCount: 64, 
-    leadIn: 2, 
-    pattern: [0, 1, 2, 3, 2, 1, 0, 3, 1, 2, 3, 0], 
+    bpm: 100, // ~100 BPM = 0.6s pro Beat
+    noteCount: 75, // 45 Sekunden Spielzeit = ca. 75 Beats
+    leadIn: 1.5, // Kurzer Vorlauf vor den ersten Noten
+    pattern: [
+      0, 2, 0, 2,  // Bassline Pattern
+      1, 3, 1, 3,
+      0, 2, 3, 1,
+      2, 0, 3, 1,
+      0, 1, 2, 3,  // Variation
+      2, 3, 1, 0
+    ], 
     audioPath: '/src/assets/song/Stevie_Wonder_-_Superstition.mp3',
     audioStartTime: 5,
     audioEndTime: 50

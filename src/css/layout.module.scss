@@ -13,6 +13,12 @@
   padding: 20px;
   align-items: start;
   max-height: calc(100vh - 0px);
+  transition: grid-template-columns 0.3s ease;
+}
+
+.layout.sidebarCollapsed {
+  grid-template-columns: 1fr 0px;
+  gap: 0;
 }
 
 .center {

@@ -34,6 +34,7 @@ function App() {
   const [startSignal, setStartSignal] = useState(0)
   const [sessionFinished, setSessionFinished] = useState(false)
   const [playersPlayedThisRound, setPlayersPlayedThisRound] = useState(0)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Gewinner (höchster Score)
   const winner = useMemo(() => players.reduce<Player | null>((best, cur) => best == null || cur.score > best.score ? cur : best, null), [players])
@@ -71,7 +72,12 @@ function App() {
     const idx = players.findIndex(p => p.id === activePlayerId); if (idx === -1) return
     const nextPlayedCount = playersPlayedThisRound + 1
     const roundDone = nextPlayedCount >= players.length
-    if (roundDone) { setSessionFinished(true); setPlayersPlayedThisRound(0); return }
+    if (roundDone) { 
+      setSessionFinished(true); 
+      setPlayersPlayedThisRound(0); 
+      setSidebarCollapsed(false); // Sidebar wieder öffnen bei Session-Ende
+      return 
+    }
     const nextIdx = (idx + 1) % players.length
     setActivePlayerId(players[nextIdx].id)
     setPlayersPlayedThisRound(nextPlayedCount)
@@ -84,6 +90,7 @@ function App() {
     setSessionFinished(false)
     setPlayersPlayedThisRound(0)
     setStartSignal(s => s + 1)
+    setSidebarCollapsed(true) // Sidebar einklappen wenn Spiel startet
   }
 
   /** Neues Spiel: Reset Scores & Start bei erstem Spieler */
@@ -112,7 +119,7 @@ function App() {
 
   return (
     <div className={layoutStyles.app}>
-      <div className={layoutStyles.layout}>
+      <div className={`${layoutStyles.layout} ${sidebarCollapsed ? layoutStyles.sidebarCollapsed : ''}`}>
         <main className={layoutStyles.center}>
           <div className={layoutStyles.canvasWrapper}>
             <Canvas
@@ -132,17 +139,19 @@ function App() {
           </div>
         </main>
 
-        <Sidebar
-          players={players}
-          activePlayerId={activePlayerId}
-          onSelectPlayer={setActivePlayerId}
-          newPlayerName={newPlayerName}
-          setNewPlayerName={setNewPlayerName}
-          addPlayer={addPlayer}
-          songId={songId}
-          setSongId={setSongId}
-          activePlayerName={activePlayer?.name}
-        />
+        {!sidebarCollapsed && (
+          <Sidebar
+            players={players}
+            activePlayerId={activePlayerId}
+            onSelectPlayer={setActivePlayerId}
+            newPlayerName={newPlayerName}
+            setNewPlayerName={setNewPlayerName}
+            addPlayer={addPlayer}
+            songId={songId}
+            setSongId={setSongId}
+            activePlayerName={activePlayer?.name}
+          />
+        )}
       </div>
     </div>
   )

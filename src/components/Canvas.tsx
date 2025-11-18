@@ -97,7 +97,17 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
     if(getPrepare()>0 && !isRunning){ ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(0,0,width,height); ctx.fillStyle='#fff'; ctx.font='bold 34px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText(`Spieler ${activePlayerName || ''} bereit machen...`, width/2,height/2 - 30); ctx.font='18px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText('Gleich startet der Countdown', width/2,height/2 + 10); }
     if(getCountdown()>0){ const n=Math.max(1,Math.ceil(getCountdown())); ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0,0,width,height); ctx.fillStyle='#fff'; ctx.font='bold 96px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText(String(n), width/2, height/2); }
     if(sessionFinished){ ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,width,height); }
-    if(feedbackTimerRef.current>0){ ctx.fillStyle= lastJudgementRef.current==='MISS' ? '#ef4444' : '#22c55e'; ctx.font='bold 28px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillText(lastJudgementRef.current, width/2, height - 140 - 20); }
+    
+    // Feedback (PERFECT/GOOD/MISS) - größer und tiefer positioniert
+    if(feedbackTimerRef.current>0){ 
+      const isMiss = lastJudgementRef.current==='MISS';
+      ctx.fillStyle = isMiss ? '#ef4444' : '#22c55e'; 
+      ctx.font='bold 48px system-ui, -apple-system, Segoe UI, Roboto, Arial'; 
+      ctx.textAlign='center';
+      // 10px weiter unten: war "height - 140 - 20", jetzt "height - 140 - 10"
+      ctx.fillText(lastJudgementRef.current, width/2, height - 140 - 10); 
+    }
+    
     ctx.font='bold 16px system-ui, -apple-system, Segoe UI, Roboto, Arial'; ctx.fillStyle='#e5e7eb'; for(let i=0;i<LANES;i++){ const x=i*laneWidth + laneWidth/2; ctx.fillText(LANE_KEYS[i].toUpperCase(), x, height - 12); }
   };
 
