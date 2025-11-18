@@ -17,6 +17,10 @@ export interface SongConfig {
   pattern: number[];
   /** Pfad zur Audio-Datei (optional) */
   audioPath?: string;
+  /** Audio-Startzeit in Sekunden (optional) */
+  audioStartTime?: number;
+  /** Audio-Endzeit in Sekunden (optional) */
+  audioEndTime?: number;
 }
 
 /** Demo-Songs */
@@ -30,7 +34,9 @@ export const SONGS: SongConfig[] = [
     noteCount: 64, 
     leadIn: 2, 
     pattern: [0, 1, 2, 3, 2, 1, 0, 3, 1, 2, 3, 0], 
-    audioPath: '/src/assets/song/Stevie_Wonder_-_Superstition.mp3' 
+    audioPath: '/src/assets/song/Stevie_Wonder_-_Superstition.mp3',
+    audioStartTime: 5,
+    audioEndTime: 50
   },
 ];
 

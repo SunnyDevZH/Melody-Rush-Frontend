@@ -107,13 +107,30 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
       startTimeRef.current = nowMs; 
       timeRef.current = 0;
       // Audio starten wenn vorhanden
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
+      if (audioRef.current && currentSong.audioPath) {
+        audioRef.current.currentTime = currentSong.audioStartTime || 0;
         audioRef.current.play().catch(err => console.warn('Audio play failed:', err));
       }
     }
-    if(isRunning){ if(startTimeRef.current === null){ startTimeRef.current = nowMs - pausedTimeRef.current * 1000; }
-      const nowSec = (nowMs - startTimeRef.current)/1000; timeRef.current = nowSec; updateMisses(nowSec);
+    if(isRunning){ 
+      if(startTimeRef.current === null){ startTimeRef.current = nowMs - pausedTimeRef.current * 1000; }
+      const nowSec = (nowMs - startTimeRef.current)/1000; 
+      timeRef.current = nowSec; 
+      updateMisses(nowSec);
+      
+      // Prüfen ob Audio-Endzeit erreicht wurde
+      if (audioRef.current && currentSong.audioEndTime) {
+        const audioTime = audioRef.current.currentTime;
+        if (audioTime >= currentSong.audioEndTime) {
+          finishedRef.current = true;
+          setIsRunning(false);
+          pausedTimeRef.current = timeRef.current;
+          audioRef.current.pause();
+          onFinished?.(score);
+          return; // Früher exit wenn Audio-Ende erreicht
+        }
+      }
+      
       const allJudged = notesRef.current.length>0 && notesRef.current.every(n => !!n.judged);
       if(!finishedRef.current && allJudged && nowSec >= lastNoteTime + TIMING_WINDOWS.LATE + 0.05){ 
         finishedRef.current=true; 
@@ -127,7 +144,7 @@ const Canvas: React.FC<CanvasProps> = ({ width = 800, height = 600, songId, onSc
     if(feedbackTimerRef.current>0 && dt>0){ feedbackTimerRef.current = Math.max(0, feedbackTimerRef.current - dt); }
     if(dt>0){ for(const n of notesRef.current){ if((n.judged==='perfect' || n.judged==='good') && n.hitFlash && n.hitFlash>0){ n.hitFlash = Math.max(0, n.hitFlash - dt); } } }
     const ctx = canvasRef.current?.getContext('2d'); if(ctx) draw(ctx, timeRef.current);
-  }, [width, height, isRunning, sessionFinished, chart, lastNoteTime]);
+  }, [width, height, isRunning, sessionFinished, chart, lastNoteTime, currentSong, score, onFinished]);
 
   const onStart = () => { if(!canStart || sessionFinished) return; onManualStart?.(); };
   const onStop = () => { 
