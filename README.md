@@ -43,9 +43,9 @@ npm run preview
 - 4 Platten aus dem 3D Drucker
 - Qwiic/JST-SH-Kabel
 
-**Foto**: 
+### Foto:
 
-### Aufbau – Unterseite
+**Aufbau – Unterseite**: 
 
 <img src="arduino/board_down.JPG" width="150">
 
