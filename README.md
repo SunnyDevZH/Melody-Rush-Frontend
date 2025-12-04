@@ -45,7 +45,9 @@ npm run preview
 
 **Foto**: 
 
-![Board Unterseite](arduino/board_down.JPG)
+## Aufbau – Unterseite
+
+<img src="arduino/board_down.JPG" width="150">
 
 **Code Installation**: 
 
