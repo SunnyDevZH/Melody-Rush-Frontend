@@ -36,9 +36,9 @@ npm run preview
 
 ## 🎯 Spielanleitung
 
-1. **Spiel starten**: Klicke auf "Start" um das Spiel zu beginnen
+1. **Teams eingeben**: Dein Teamnamen eingeben
 2. **Song auswählen**: Wähle einen der verfügbaren Demo-Songs aus
-3. **Spieler eingeben**: Optional deinen Namen oder mehrere Namen eingeben
+3. **Spiel starten**: Klicke auf "Start" um das Spiel zu beginnen
 4. **Noten treffen**: Drücke A, S, D, F wenn die Noten die Ziellinie erreichen
 5. **Bewertung erhalten**: PERFECT (±0.07s), GOOD (±0.14s) oder MISS
 6. **Combo aufbauen**: Aufeinanderfolgende Treffer erhöhen den Score-Multiplikator
@@ -48,7 +48,9 @@ npm run preview
 - **Taste S**: Spalte 2 (Orange)  
 - **Taste D**: Spalte 3 (Grün)
 - **Taste F**: Spalte 4 (Blau)
-- **Tasten halten**: Lane leuchtet solange die Taste gedrückt wird
+
+- **Oder mit den Arduino Tasten**: Tasten für A / S / D / F
+- **Siehe Code**: Arduino Ordner -> main.py und 
 
 ## 🛠️ Technische Details
 
