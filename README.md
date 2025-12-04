@@ -45,6 +45,10 @@ npm run preview
 
 **Foto**: 
 
+![Board Unterseite](arduino/board_down.JPG)
+
+**Code Installation**: 
+
 1. **Code**: Arduino Ordner -> main.py und 
 2. **Main Board**: Lade den Code auf Root ebene auf dein Arduino Nano32
 
