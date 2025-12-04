@@ -45,7 +45,7 @@ npm run preview
 
 **Foto**: 
 
-## Aufbau – Unterseite
+### Aufbau – Unterseite
 
 <img src="arduino/board_down.JPG" width="150">
 
