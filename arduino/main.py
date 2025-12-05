@@ -34,7 +34,7 @@ def should_press_f():
 # =========================
 # LEDs aktualisieren
 # =========================
-def update_leds_for_keypress(active):
+def update_leds(active):
     farbe = FARBE_TASTENDRUCK if active else FARBE_AUS              # If True -> Rot, else Aus
 
     for i in range(NUM_LEDS):
@@ -55,7 +55,7 @@ keyboard.start()                                                    # ⚠️ Ach
 while True:
     trigger = should_press_f()                                      # Überprüfen, ob die F-Taste gedrückt wird
 
-    update_leds_for_keypress(trigger)                               # Trigger True/False -> LEDs aktualisieren
+    update_leds(trigger)                                            # Trigger True/False -> LEDs aktualisieren
 
     keyboard.update()                                               # Tastenzustand aktualisieren
     sleep_ms(10)
