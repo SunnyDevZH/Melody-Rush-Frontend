@@ -13,6 +13,9 @@ Ein interaktives Spiel, das mit React, TypeScript und HTML5 Canvas entwickelt wu
 - **Visuelle Effekte**: Leuchtende Lane-Highlights und Flash-Effekte bei Treffern
 - **Responsive Design**: Modern gestaltetes UI mit Glasmorphismus-Effekten
 
+## Video 🎥
+<video src="arduino/video.mp4" width="300" controls></video>
+
 ## 🚀 Installation und Ausführung
 
 ### Voraussetzungen
