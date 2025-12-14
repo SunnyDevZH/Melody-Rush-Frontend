@@ -14,13 +14,8 @@ Ein interaktives Spiel, das mit React, TypeScript und HTML5 Canvas entwickelt wu
 - **Responsive Design**: Modern gestaltetes UI mit Glasmorphismus-Effekten
 
 ## 🎥 Video 
-<p align="center">
-  <video
-    src="https://github.com/user-attachments/assets/967bd97b-11af-4385-91d6-6721ae9cd201"
-    width="80%"
-    controls>
-  </video>
-</p>
+https://github.com/user-attachments/assets/967bd97b-11af-4385-91d6-6721ae9cd201
+
 ## 🚀 Installation und Ausführung
 
 ### Voraussetzungen
