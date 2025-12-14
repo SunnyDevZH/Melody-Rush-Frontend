@@ -14,7 +14,7 @@ Ein interaktives Spiel, das mit React, TypeScript und HTML5 Canvas entwickelt wu
 - **Responsive Design**: Modern gestaltetes UI mit Glasmorphismus-Effekten
 
 ## 🎥 Video 
-https://github.com/SunnyDevZH/Melody-Rush-Frontend/issues/2
+https://github.com/user-attachments/assets/967bd97b-11af-4385-91d6-6721ae9cd201
 
 ## 🚀 Installation und Ausführung
 
